@@ -13,6 +13,7 @@
     "clean": "npm run prettier && npm run lint"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "fetch-meta-tags": "^1.0.12",
     "mongoose": "^6.8.1"
