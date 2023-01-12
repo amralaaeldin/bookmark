@@ -1,10 +1,12 @@
-import { Schema, model, Types } from 'mongoose';
+import { Schema, model } from 'mongoose';
+import { bookmarkSchema, IBookmark } from './bookmark.model';
 
 interface IUser {
   name: string;
   email: string;
-  bookmarks?: Types.ObjectId[];
+  bookmarks?: IBookmark[];
   avatar?: string;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -13,8 +15,9 @@ const userSchema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    bookmarks: { type: [Schema.Types.ObjectId], ref: 'Bookmark' },
+    bookmarks: { type: [bookmarkSchema] },
     avatar: { type: String },
+    tags: { type: [String] },
   },
   { timestamps: true }
 );

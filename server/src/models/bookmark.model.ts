@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema } from 'mongoose';
 
 interface IBookmark {
   title: string;
@@ -23,5 +23,4 @@ const bookmarkSchema = new Schema<IBookmark>(
   { timestamps: true }
 );
 
-const Bookmark = model<IBookmark>('User', bookmarkSchema);
-export default Bookmark;
+export { bookmarkSchema, IBookmark };
