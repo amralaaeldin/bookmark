@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { bookmarkSchema, IBookmark } from './bookmark.model';
-import './../db'
+import './../db';
 
 interface IUser {
   name: string;

@@ -14,9 +14,9 @@ export class AuthController {
   public async signup(req: Request, res: Response) {
     try {
       if (!validateSignup(req.body))
-      return res.status(400).json({
-        message: 'Error: Required data missing',
-      });
+        return res.status(400).json({
+          message: 'Error: Required data missing',
+        });
       const user = await User.findOne({ email: req.body.email }).exec();
       if (user) return res.status(400).json({ message: `Error: email ${req.body.email} is already exist` });
 
@@ -49,17 +49,14 @@ export class AuthController {
 
   public async login(req: Request, res: Response) {
     try {
-      if (!validateSignup(req.body))
-      return res.status(400).json({
-        message: 'Error: Required data missing',
-      });
+      if (!validateLogin(req.body))
+        return res.status(400).json({
+          message: 'Error: Required data missing',
+        });
 
       const user = await User.findOne({ email: req.body.email }).select('name email password').exec();
 
-      if (
-        !user ||
-        !bcrypt.compareSync(req.body.password + (process.env.PEPPER as string), user.password as string)
-      )
+      if (!user || !bcrypt.compareSync(req.body.password + (process.env.PEPPER as string), user.password as string))
         return res.status(400).json({ message: 'Error: Wrong credentials' });
 
       const accessToken = signAccessToken({
@@ -145,8 +142,8 @@ export class AuthController {
       let { refreshToken } = req.body;
       if (!refreshToken) return res.status(400);
       const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string) as JwtPayload;
-      const accessToken = await signAccessToken({user: payload.user});
-      refreshToken = await signRefreshToken({user: payload.user});
+      const accessToken = await signAccessToken({ user: payload.user });
+      refreshToken = await signRefreshToken({ user: payload.user });
       return res.status(200).json({ accessToken: accessToken, refreshToken: refreshToken });
     } catch (err) {
       return res.status(401).json(err);
