@@ -1,4 +1,5 @@
 import { Schema } from 'mongoose';
+import './../db'
 
 interface IBookmark {
   title: string;
