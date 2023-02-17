@@ -132,8 +132,17 @@ export class AuthController {
     return res.json(req.session.userData);
   }
 
-  public logout(req: Request, res: Response) {
-    if (req.session) req.session.destroy(() => 0);
+  public async logout(req: Request, res: Response) {
+    if (req.session?.loggedin) req.session.destroy(() => 0);
+    else {
+      const { refreshToken } = req.body;
+      if (!refreshToken) return res.status(400);
+      const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string) as JwtPayload;
+      const user = await User.findOne({ email: payload.user.email }).select('email').exec();
+      if (!user) return res.status(401).json({ message: 'Access denied' });
+      user.refreshToken = '';
+      await user.save();
+    }
     return res.redirect(process.env.CLIENT_URL as string);
   }
 
@@ -142,8 +151,12 @@ export class AuthController {
       let { refreshToken } = req.body;
       if (!refreshToken) return res.status(400);
       const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string) as JwtPayload;
+      const user = await User.findOne({ email: payload.user.email }).select('email').exec();
+      if (!user) return res.status(401).json({ message: 'Access denied' });
       const accessToken = await signAccessToken({ user: payload.user });
       refreshToken = await signRefreshToken({ user: payload.user });
+      user.refreshToken = refreshToken;
+      await user.save();
       return res.status(200).json({ accessToken: accessToken, refreshToken: refreshToken });
     } catch (err) {
       return res.status(401).json(err);

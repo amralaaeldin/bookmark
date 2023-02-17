@@ -12,6 +12,6 @@ routes.get('/auth/google/callback', authController.handleGoogleCallback, authCon
 routes.get('/login/success', authController.getData);
 
 routes.post('/refreshToken', authController.refreshToken);
-routes.get('/logout', authController.logout);
+routes.post('/logout', authController.logout);
 
 export { routes as authRoutes };
