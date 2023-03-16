@@ -1,0 +1,99 @@
+.container.faq-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 80px;
+}
+
+.container.faq-section .content {
+  margin-bottom: 60px;
+}
+
+.container.faq-section .wrapper {
+  text-align: left;
+  position: relative;
+  max-width: 500px;
+}
+.container.faq-section .wrapper::before {
+  content: "";
+  background-color: hsl(0, 0%, 83%);
+  height: 1px;
+  width: 100%;
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.container.faq-section .wrapper .item {
+  position: relative;
+}
+.container.faq-section .wrapper .item::after {
+  content: "";
+  background-color: hsl(0, 0%, 83%);
+  height: 1px;
+  width: 100%;
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.container.faq-section .wrapper .qa-content {
+  padding: 20px 0;
+}
+.container.faq-section .wrapper .qa-content h3 {
+  position: relative;
+  font-weight: 400;
+  color: hsl(229, 31%, 21%);
+  margin: 3px 0;
+  font-size: 1.05em;
+}
+.container.faq-section .wrapper .qa-content h3::first-letter {
+  text-transform: capitalize;
+}
+.container.faq-section .wrapper .qa-content p {
+  max-height: 0;
+  margin: 0;
+  overflow: hidden;
+  color: hsl(229, 25%, 25%, 97%);
+  font-weight: 300;
+  letter-spacing: 0.2px;
+  line-height: 1.9em;
+  transition: 0.3s ease-in-out;
+  -webkit-transition: 0.3s ease-in-out;
+  -moz-transition: 0.3s ease-in-out;
+  -ms-transition: 0.3s ease-in-out;
+  -o-transition: 0.3s ease-in-out;
+}
+
+.container.faq-section .wrapper .qa-content:hover h3 {
+  color: #fa5757;
+}
+.container.faq-section .wrapper .item .qa-content.active p {
+  max-height: 200px;
+  padding-top: 30px;
+  padding-bottom: 10px;
+  transition: 0.3s ease-in-out;
+  -webkit-transition: 0.3s ease-in-out;
+  -moz-transition: 0.3s ease-in-out;
+  -ms-transition: 0.3s ease-in-out;
+  -o-transition: 0.3s ease-in-out;
+}
+.container.faq-section .wrapper .icon {
+  width: 12px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  -o-transform: translateY(-50%);
+}
+
+.container.faq-section .wrapper .item .icon.active {
+  transform: translateY(-50%) rotate(180deg);
+  -webkit-transform: translateY(-50%) rotate(180deg);
+  -moz-transform: translateY(-50%) rotate(180deg);
+  -ms-transform: translateY(-50%) rotate(180deg);
+  -o-transform: translateY(-50%) rotate(180deg);
+}

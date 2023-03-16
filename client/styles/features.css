@@ -1,0 +1,230 @@
+main.container.features {
+  flex-direction: column;
+}
+
+.wrapper {
+  overflow: hidden;
+}
+
+main.container p {
+  color: var(--text-grey);
+  max-width: 620px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+}
+
+.links-container {
+  display: flex;
+  position: relative;
+  width: 88vw;
+  max-width: 700px;
+  margin: 20px auto;
+}
+.links-container::after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 1px;
+  width: 100%;
+  background-color: hsl(0, 0%, 83%);
+  bottom: 0;
+}
+
+.links-container span.slide-title {
+  background-color: rgb(255, 255, 255);
+  text-transform: capitalize;
+  display: inline-block;
+  padding: 15px 20px;
+  width: calc(65% / 3);
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+  color: hsl(229, 8%, 50%);
+  font-weight: 500;
+  font-size: 0.9em;
+  position: relative;
+}
+.links-container span.slide-title:hover {
+  color: var(--main-red);
+}
+
+.links-container span.slide-title.active {
+  color: hsl(229, 31%, 21%);
+}
+
+.underline-selected {
+  display: block;
+  position: absolute;
+  height: 2.5px;
+  width: calc(100% / 3);
+  background-color: var(--main-red);
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  transition: 0.3s ease;
+  -webkit-transition: 0.3s ease;
+  -moz-transition: 0.3s ease;
+  -ms-transition: 0.3s ease;
+  -o-transition: 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .links-container {
+    flex-direction: column;
+  }
+  .links-container span.slide-title {
+    padding: 15px 20px;
+  }
+
+  .links-container span.slide-title::after {
+    content: "";
+    display: block;
+    position: absolute;
+    height: 1px;
+    width: 100%;
+    background-color: hsl(0, 0%, 83%);
+    bottom: 0;
+    left: 0;
+  }
+  .underline-selected {
+    display: none;
+  }
+  .links-container span.slide-title.active::before {
+    content: "";
+    display: block;
+    position: absolute;
+    height: 3.5px;
+    width: calc(100% / 3);
+    background-color: var(--main-red);
+    bottom: 0;
+    left: 50%;
+    z-index: 10;
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    -o-transform: translateX(-50%);
+  }
+  .links-container::after {
+    display: none;
+  }
+}
+
+.container-features {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  margin-top: 30px;
+  transition: 0.3s ease;
+  -webkit-transition: 0.3s ease;
+  -moz-transition: 0.3s ease;
+  -ms-transition: 0.3s ease;
+  -o-transition: 0.3s ease;
+}
+
+.container-feature {
+  width: 100%;
+  min-width: 100%;
+  display: flex;
+  gap: 7%;
+}
+
+.container-feature .content {
+  width: 48%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: left;
+  max-width: 90vw;
+}
+
+.container-feature .img {
+  width: 45%;
+}
+.container-feature .content p {
+  max-width: 85%;
+  margin-left: 0;
+}
+
+@media (max-width: 992px) {
+  .container-feature {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  .container-feature .content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .container-feature .content p {
+    max-width: 85%;
+    margin-left: auto;
+  }
+  .container-feature .content button {
+    display: none;
+  }
+
+  .container-feature .img {
+    width: 80vw;
+    display: flex;
+    justify-content: center;
+    max-width: 600px;
+    margin-bottom: 20px;
+  }
+
+  .container.features .shape {
+    top: 47%;
+    height: 25%;
+  }
+}
+
+@media (max-width: 800px) {
+  .container.features .shape {
+    top: 44%;
+  }
+}
+@media (max-width: 768px) {
+  .container.features .shape {
+    top: 47%;
+  }
+}
+
+@media (max-width: 525px) {
+  .container.features .shape {
+    top: 49%;
+    height: 22%;
+  }
+}
+
+@media (max-width: 460px) {
+  .container.features .shape {
+    top: 48%;
+  }
+}
+@media (max-width: 410px) {
+  .container.features .shape {
+    height: 20%;
+  }
+}
+
+@media (max-width: 350px) {
+  .container.features .shape {
+    top: 50%;
+    height: 16%;
+  }
+}
+@media (max-width: 320px) {
+  .container.features .shape {
+    top: 49%;
+    height: 14%;
+  }
+}
+@media (max-width: 265px) {
+  .container.features .shape {
+    top: 49%;
+    height: 12%;
+  }
+}
