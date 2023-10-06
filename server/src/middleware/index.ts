@@ -1,1 +1,2 @@
-export * from './isAuthorized';
+export * from './isAuthenticated';
+export * from './validator';

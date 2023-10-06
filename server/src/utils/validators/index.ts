@@ -1,2 +1,2 @@
-export * from './loginSchema';
-export * from './signupSchema';
+export * from './authValidator';
+export * from './bookmarkValidator';

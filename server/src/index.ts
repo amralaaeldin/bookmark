@@ -1,17 +1,16 @@
 import express, { Request, Response } from 'express';
-import bodyParser from 'body-parser';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import MongoStore from 'connect-mongo';
-import { authRoutes } from './routes';
+import { authRoutes, bookmarkRoutes } from './routes';
 import './utils/passport';
 
 dotenv.config();
 const app = express();
 const port = 7000;
 
-app.use(bodyParser.json());
+app.use(express.json()); 
 
 app.use(
   cors({
@@ -37,9 +36,12 @@ app.get('/', (_: Request, res: Response) => {
 });
 
 app.use('/', authRoutes);
+app.use('/', bookmarkRoutes);
 
 app.use(function (_, res) {
-  return res.status(404).send('not found');
+  return res.status(404).send({
+    message: 'Not found',
+  });
 });
 
 app.listen(port, () => {
