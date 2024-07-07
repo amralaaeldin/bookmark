@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 const port = 7000;
 
-app.use(express.json()); 
+app.use(express.json());
 
 app.use(
   cors({
@@ -32,7 +32,9 @@ app.use(
 );
 
 app.get('/', (_: Request, res: Response) => {
-  res.send('hello world!');
+  res.json({
+    result: 'hello world!',
+  });
 });
 
 app.use('/', authRoutes);

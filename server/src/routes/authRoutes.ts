@@ -13,7 +13,7 @@ routes.get('/auth/google', authController.handleGoogleRedirect);
 routes.get('/auth/google/callback', authController.handleGoogleCallback, (req, res) => authController.handleGoogleCallbackNext(req as AuthRequest, res));
 routes.get('/login/success', (req, res) => authController.getData(req as AuthRequest, res));
 
-routes.post('/refreshToken', authController.refreshToken);
+routes.post('/refresh-token', authController.refreshToken);
 routes.post('/logout', (req, res) => authController.logout(req as AuthRequest, res));
 
 export { routes as authRoutes };
