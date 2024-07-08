@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
-import { AuthRequest, JwtPayload } from '../../utils/types';
+import { CheckAuthRequest, JwtPayload } from '../../utils/types';
 
 dotenv.config();
 
-export function storeSession(req: AuthRequest, payload: JwtPayload) {
+export function storeSession(req: CheckAuthRequest, payload: JwtPayload) {
   req.session.userData = {
     id: String(payload.user.id),
     name: payload.user.name,

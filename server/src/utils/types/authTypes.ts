@@ -5,6 +5,14 @@ export enum AuthType {
   LOGIN = 'login',
 }
 
+export interface UserRequestBody {
+  name: string;
+  email: string;
+  avatar?: string;
+  password: string;
+  refreshToken?: string;
+}
+
 export interface GoogleProfile {
   user?: {
     id: string;
@@ -36,4 +44,5 @@ export interface UserSession {
   };
 }
 
-export type AuthRequest = Request & UserSession & GoogleProfile;
+export type AuthRequest = Request<object, object, UserRequestBody> & UserSession & GoogleProfile;
+export type CheckAuthRequest = Request<object, object, UserRequestBody> & UserSession;

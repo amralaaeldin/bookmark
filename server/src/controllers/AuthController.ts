@@ -25,8 +25,8 @@ export class AuthController {
       const jwtPayload = {
         user: {
           id: String(user._id),
-          name: req.body.name as string,
-          email: req.body.email as string,
+          name: req.body.name,
+          email: req.body.email,
           role: req.body.email === process.env.ADMIN_EMAIL ? 'admin' : 'user',
           avatar: req.body.avatar ?? 'uploads/default-avatar.jpg',
         },
@@ -50,7 +50,13 @@ export class AuthController {
     try {
       const user = await User.findOne({ email: req.body.email }).select('name email password').exec();
 
-      if (!user || !bcrypt.compareSync(req.body.password + (process.env.PEPPER as string), user.password as string))
+      if (!user)
+        return res.status(400).json({ message: `Error: email ${req.body.email} is not exist! Sign up a new account` });
+
+      if (!user.password)
+        return res.status(400).json({ message: 'Oops: you may have signed up with social media account!' });
+
+      if (!bcrypt.compareSync(req.body.password + (process.env.PEPPER as string), user.password))
         return res.status(400).json({ message: 'Error: Wrong credentials' });
 
       const jwtPayload = {
@@ -155,7 +161,7 @@ export class AuthController {
   public async refreshToken(req: Request, res: Response) {
     try {
       let { refreshToken } = req.body;
-      if (!refreshToken) return res.status(400);
+      if (!refreshToken) return res.status(400).json({ message: 'Provide refresh token' });
 
       const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string) as JwtPayload;
       const user = await User.findOne({ email: payload.user.email }).select('email').exec();
