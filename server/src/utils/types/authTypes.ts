@@ -1,10 +1,9 @@
-import { Request } from "express";
+import { Request } from 'express';
 
 export enum AuthType {
   SIGNUP = 'signup',
   LOGIN = 'login',
 }
-
 
 export interface GoogleProfile {
   user?: {
@@ -21,7 +20,7 @@ export interface GoogleProfile {
     photos: {
       value: string;
     }[];
-  }
+  };
 }
 
 export interface UserSession {
@@ -31,9 +30,10 @@ export interface UserSession {
       name: string;
       email: string;
       avatar?: string;
-    }
+      role?: string;
+    };
     loggedin?: boolean;
-  }
+  };
 }
 
-export type AuthRequest = Request & UserSession & GoogleProfile
+export type AuthRequest = Request & UserSession & GoogleProfile;

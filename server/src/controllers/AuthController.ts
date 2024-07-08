@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { AuthType, JwtPayload, AuthRequest } from './../utils/types';
-import { signRefreshToken, signAccessToken } from './../utils/jwt-helpers';
+import { signRefreshToken, signAccessToken, storeSession } from './../utils/auth-helpers';
 import { User } from './../models';
 
 dotenv.config();
@@ -15,35 +15,30 @@ export class AuthController {
       let user = await User.findOne({ email: req.body.email }).exec();
       if (user) return res.status(400).json({ message: `Error: email ${req.body.email} is already exist` });
 
-      const accessToken = signAccessToken({
-        user: {
-          name: req.body.name as string,
-          email: req.body.email as string,
-        },
-      });
-
-      const refreshToken = signRefreshToken({
-        user: {
-          name: req.body.name as string,
-          email: req.body.email as string,
-        },
-      });
-
-      user = await new User({
+      user = new User({
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
         avatar: req.body.avatar ?? 'uploads/default-avatar.jpg',
-        refreshToken,
-      }).save();
+      });
 
-      req.session.userData = {
-        id: String(user._id),
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
+      const jwtPayload = {
+        user: {
+          id: String(user._id),
+          name: req.body.name as string,
+          email: req.body.email as string,
+          role: req.body.email === process.env.ADMIN_EMAIL ? 'admin' : 'user',
+          avatar: req.body.avatar ?? 'uploads/default-avatar.jpg',
+        },
       };
-      req.session.loggedin = true;
+
+      const accessToken = signAccessToken(jwtPayload);
+      const refreshToken = signRefreshToken(jwtPayload);
+
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      storeSession(req, jwtPayload);
 
       return res.status(201).json({ accessToken: accessToken, refreshToken: refreshToken });
     } catch (err) {
@@ -58,30 +53,23 @@ export class AuthController {
       if (!user || !bcrypt.compareSync(req.body.password + (process.env.PEPPER as string), user.password as string))
         return res.status(400).json({ message: 'Error: Wrong credentials' });
 
-      const accessToken = signAccessToken({
+      const jwtPayload = {
         user: {
+          id: String(user._id),
           name: user.name,
           email: user.email,
+          avatar: user.avatar,
+          role: req.body.email === process.env.ADMIN_EMAIL ? 'admin' : 'user',
         },
-      });
+      };
 
-      const refreshToken = signRefreshToken({
-        user: {
-          name: user.name,
-          email: user.email,
-        },
-      });
+      const accessToken = signAccessToken(jwtPayload);
+      const refreshToken = signRefreshToken(jwtPayload);
 
       user.refreshToken = refreshToken;
       await user.save();
 
-      req.session.userData = {
-        id: String(user._id),
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      };
-      req.session.loggedin = true;
+      storeSession(req, jwtPayload);
 
       return res.status(200).json({ accessToken: accessToken, refreshToken: refreshToken });
     } catch (err) {
@@ -112,7 +100,7 @@ export class AuthController {
     const { type } = JSON.parse(Buffer.from(state as string, 'base64').toString());
     if (!req.user) return res.status(400).json({ message: 'Authentication failed' });
 
-    let user = null
+    let user = null;
     if (type === AuthType.LOGIN) {
       user = await User.findOne({ email: req.user.emails?.[0].value }).select('email password').lean().exec();
       if (!user) return res.status(400).json({ message: 'Error: Account not exist! Sign up a new account' });
@@ -129,20 +117,22 @@ export class AuthController {
     }
 
     if (!user) return res.status(500).json({ message: 'Error: Something went wrong' });
-    req.session.userData = {
-      id: String(user._id),
-      name: req.user.displayName,
-      email: req.user.emails?.[0].value,
-      avatar: req.user.photos?.[0].value,
-    };
-    req.session.loggedin = true;
 
+    storeSession(req, {
+      user: {
+        id: String(user._id),
+        name: req.user.displayName,
+        email: req.user.emails?.[0].value,
+        avatar: req.user.photos?.[0].value,
+        role: req.body.email === process.env.ADMIN_EMAIL ? 'admin' : 'user',
+      },
+    });
 
     return res.redirect(process.env.CLIENT_URL as string);
   }
 
   public getData(req: AuthRequest, res: Response) {
-    if (!(req.session.loggedin)) return res.status(401).json({ message: 'Access denied' });
+    if (!req.session.loggedin) return res.status(401).json({ message: 'Access denied' });
     return res.json(req.session.userData);
   }
 
@@ -150,7 +140,7 @@ export class AuthController {
     if (req.session.loggedin) req.session.destroy(() => 0);
     else {
       const { refreshToken } = req.body;
-      if (!refreshToken) return res.status(400);
+      if (!refreshToken) return res.status(400).json({ message: 'Bad request' });
 
       const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string) as JwtPayload;
       const user = await User.findOne({ email: payload.user.email }).select('email').exec();
@@ -171,8 +161,12 @@ export class AuthController {
       const user = await User.findOne({ email: payload.user.email }).select('email').exec();
       if (!user) return res.status(401).json({ message: 'Access denied' });
 
-      const accessToken = await signAccessToken({ user: payload.user });
-      refreshToken = await signRefreshToken({ user: payload.user });
+      const accessToken = signAccessToken({
+        user: { ...payload.user, role: req.body.email === process.env.ADMIN_EMAIL ? 'admin' : 'user' },
+      });
+      refreshToken = signRefreshToken({
+        user: { ...payload.user, role: req.body.email === process.env.ADMIN_EMAIL ? 'admin' : 'user' },
+      });
       user.refreshToken = refreshToken;
       await user.save();
 
