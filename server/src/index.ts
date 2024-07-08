@@ -27,7 +27,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.DB_URL as string,
-      ttl: +(process.env.SESSION_TTL as string), // (seconds)
+      ttl: +(process.env.SESSION_TTL || '60'), // seconds
     }),
   })
 );

@@ -6,6 +6,6 @@ dotenv.config();
 
 export function signAccessToken(payload: JwtPayload) {
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, {
-    expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN as string,
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '1h',
   });
 }
