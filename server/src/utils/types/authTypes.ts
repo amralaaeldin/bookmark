@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { Session, SessionData } from 'express-session';
 
 export enum AuthType {
   SIGNUP = 'signup',
@@ -12,7 +13,6 @@ export interface UserRequestBody {
   password: string;
   refreshToken?: string;
 }
-
 export interface GoogleProfile {
   user?: {
     id: string;
@@ -31,7 +31,19 @@ export interface GoogleProfile {
   };
 }
 
-export interface UserSession {
+export interface UserSessionData extends SessionData {
+  userData?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    role?: string;
+  };
+  loggedin?: boolean;
+}
+
+export interface UserSession extends Session {
+  userData?: UserSessionData['userData'];
   session?: {
     userData?: {
       id: string;
@@ -44,5 +56,9 @@ export interface UserSession {
   };
 }
 
-export type AuthRequest = Request<object, object, UserRequestBody> & UserSession & GoogleProfile;
-export type CheckAuthRequest = Request<object, object, UserRequestBody> & UserSession;
+export interface CheckAuthRequest extends Request {
+  session: Session & Partial<UserSessionData>;
+  body: UserRequestBody;
+}
+
+export type AuthRequest = CheckAuthRequest & GoogleProfile;

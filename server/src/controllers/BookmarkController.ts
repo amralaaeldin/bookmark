@@ -1,27 +1,27 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import mongoose from 'mongoose';
 import metaget from 'metaget';
 import dotenv from 'dotenv';
 import { Bookmark, User } from './../models';
-import { UserSession } from '../utils/types';
+import { RequestWithSession } from '../utils/types';
 
 dotenv.config();
 
 export class BookmarkController {
-  public async index(req: Request, res: Response) {
+  public async index(req: RequestWithSession, res: Response) {
     try {
-      const bookmarks = await Bookmark.find({ userId: (req as UserSession).session?.userData?.id as string });
+      const bookmarks = await Bookmark.find({ userId: req.session?.userData?.id as string });
       return res.status(200).json(bookmarks);
     } catch (err) {
       return res.status(500).json({ message: 'Error while retrieving' });
     }
   }
 
-  public async show(req: Request, res: Response) {
+  public async show(req: RequestWithSession, res: Response) {
     try {
       const bookmark = await Bookmark.findOne({
         id: req.params.id,
-        userId: (req as UserSession).session?.userData?.id as string,
+        userId: req.session?.userData?.id as string,
       });
       if (!bookmark) return res.status(404).json({ message: 'bookmark not found' });
       return res.status(200).json(bookmark);
@@ -30,7 +30,7 @@ export class BookmarkController {
     }
   }
 
-  public async store(req: Request, res: Response) {
+  public async store(req: RequestWithSession, res: Response) {
     let session = null;
 
     try {
@@ -49,13 +49,13 @@ export class BookmarkController {
             metaResponse.description ?? metaResponse['og:description'] ?? metaResponse['twitter:description'] ?? '',
           tags: [...tags],
           thumbnail: metaResponse['og:image'] ?? metaResponse['twitter:image'] ?? 'uploads/bookmark-default-image.jpg',
-          userId: (req as UserSession).session?.userData?.id as string,
+          userId: req.session?.userData?.id as string,
         },
         { session }
       );
 
       await User.updateOne(
-        { _id: (req as UserSession).session?.userData?.id },
+        { _id: req.session?.userData?.id },
         { $addToSet: { tags: { $each: [...tags] } } },
         { session }
       );
@@ -71,7 +71,7 @@ export class BookmarkController {
     }
   }
 
-  public async update(req: Request, res: Response) {
+  public async update(req: RequestWithSession, res: Response) {
     let session = null;
 
     try {
@@ -79,7 +79,7 @@ export class BookmarkController {
 
       const bookmark = await Bookmark.findOne({
         id: req.params.id,
-        userId: (req as UserSession).session?.userData?.id as string,
+        userId: req.session?.userData?.id as string,
       });
       if (!bookmark) return res.status(404).json({ message: 'bookmark not found' });
 
@@ -100,10 +100,7 @@ export class BookmarkController {
         metaResponse['og:image'] ?? metaResponse['twitter:image'] ?? 'uploads/bookmark-default-image.jpg';
       bookmark.save({ session });
 
-      await User.updateOne(
-        { _id: (req as UserSession).session?.userData?.id },
-        { $addToSet: { tags: { $each: [...tags] } } }
-      );
+      await User.updateOne({ _id: req.session?.userData?.id }, { $addToSet: { tags: { $each: [...tags] } } });
 
       await session.commitTransaction();
 
@@ -116,11 +113,11 @@ export class BookmarkController {
     }
   }
 
-  public async delete(req: Request, res: Response) {
+  public async delete(req: RequestWithSession, res: Response) {
     try {
       const bookmark = await Bookmark.findOneAndDelete({
         id: req.params.id,
-        userId: (req as UserSession).session?.userData?.id as string,
+        userId: req.session?.userData?.id as string,
       });
       if (!bookmark) return res.status(404).json({ message: 'bookmark not found' });
 
