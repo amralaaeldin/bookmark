@@ -1,16 +1,26 @@
 import { Response } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { FilterQuery } from 'mongoose';
 import metaget from 'metaget';
 import dotenv from 'dotenv';
-import { Bookmark, User } from './../models';
+import { Bookmark, IBookmark, User } from './../models';
 import { RequestWithSession } from '../utils/types';
+import { DateFilter, KeywordFilter, Filter } from '../utils/filters';
 
 dotenv.config();
 
 export class BookmarkController {
   public async index(req: RequestWithSession, res: Response) {
     try {
-      const bookmarks = await Bookmark.find({ userId: req.session?.userData?.id as string });
+      const filters: Filter[] = [new KeywordFilter(), new DateFilter()];
+      const query: FilterQuery<IBookmark>[] = [];
+
+      filters.forEach((filter) => filter.apply(query, req));
+
+      const bookmarks = await Bookmark.find({
+        userId: req.session?.userData?.id,
+        $and: query,
+      });
+
       return res.status(200).json(bookmarks);
     } catch (err) {
       return res.status(500).json({ message: 'Error while retrieving' });
@@ -31,85 +41,71 @@ export class BookmarkController {
   }
 
   public async store(req: RequestWithSession, res: Response) {
-    let session = null;
-
     try {
       const metaResponse = await metaget.fetch(req.body.url);
 
       const tags: Set<string> = new Set(req.body.tags ?? []);
 
-      session = await mongoose.startSession();
-      session.startTransaction();
+      const bookmark = await Bookmark.create({
+        url: req.body.url,
+        title: req.body.title ?? metaResponse.title ?? metaResponse['og:title'] ?? metaResponse['twitter:title'] ?? '',
+        description:
+          req.body.description ??
+          metaResponse.description ??
+          metaResponse['og:description'] ??
+          metaResponse['twitter:description'] ??
+          '',
+        tags: [...tags],
+        thumbnail: metaResponse['og:image'] ?? metaResponse['twitter:image'] ?? 'uploads/bookmark-default-image.jpg',
+        userId: req.session?.userData?.id as string,
+      });
 
-      const bookmark = await Bookmark.create(
-        {
-          url: req.body.url,
-          title: metaResponse.title ?? metaResponse['og:title'] ?? metaResponse['twitter:title'] ?? '',
-          description:
-            metaResponse.description ?? metaResponse['og:description'] ?? metaResponse['twitter:description'] ?? '',
-          tags: [...tags],
-          thumbnail: metaResponse['og:image'] ?? metaResponse['twitter:image'] ?? 'uploads/bookmark-default-image.jpg',
-          userId: req.session?.userData?.id as string,
-        },
-        { session }
-      );
-
-      await User.updateOne(
-        { _id: req.session?.userData?.id },
-        { $addToSet: { tags: { $each: [...tags] } } },
-        { session }
-      );
-
-      await session.commitTransaction();
+      await User.updateOne({ _id: req.session?.userData?.id }, { $addToSet: { tags: { $each: [...tags] } } });
 
       return res.status(201).json(bookmark);
     } catch (err) {
-      await session?.abortTransaction();
-      return res.status(500).json({ err });
-    } finally {
-      session?.endSession();
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).json({ err });
+      } else {
+        return res.status(500).json({ err });
+      }
     }
   }
 
   public async update(req: RequestWithSession, res: Response) {
-    let session = null;
-
     try {
-      const metaResponse = await metaget.fetch(req.body.url);
-
       const bookmark = await Bookmark.findOne({
         id: req.params.id,
         userId: req.session?.userData?.id as string,
       });
       if (!bookmark) return res.status(404).json({ message: 'bookmark not found' });
 
-      session = await mongoose.startSession();
-      session.startTransaction();
-
       const tags: Set<string> = new Set(req.body.tags ?? bookmark.tags);
-      bookmark.url = req.body.url;
-      bookmark.title =
-        metaResponse.title ?? metaResponse['og:title'] ?? metaResponse['twitter:title'] ?? bookmark.title;
-      bookmark.description =
-        metaResponse.description ??
-        metaResponse['og:description'] ??
-        metaResponse['twitter:description'] ??
-        bookmark.description;
+
+      let metaResponse, title, description, thumbnail;
+      if (req.body.url) {
+        metaResponse = await metaget.fetch(req.body.url);
+        title = metaResponse.title ?? metaResponse['og:title'] ?? metaResponse['twitter:title'];
+        description = metaResponse.description ?? metaResponse['og:description'] ?? metaResponse['twitter:description'];
+        thumbnail = metaResponse['og:image'] ?? metaResponse['twitter:image'];
+      }
+
+      bookmark.url = req.body.url ?? bookmark.url;
+      bookmark.title = req.body.title ?? title ?? bookmark.title;
+      bookmark.description = req.body.description ?? description ?? bookmark.description;
       bookmark.tags = [...tags];
-      bookmark.thumbnail =
-        metaResponse['og:image'] ?? metaResponse['twitter:image'] ?? 'uploads/bookmark-default-image.jpg';
-      bookmark.save({ session });
+      bookmark.thumbnail = thumbnail ?? bookmark.thumbnail;
+      bookmark.save();
 
       await User.updateOne({ _id: req.session?.userData?.id }, { $addToSet: { tags: { $each: [...tags] } } });
 
-      await session.commitTransaction();
-
       return res.status(200).json(bookmark);
     } catch (err) {
-      await session?.abortTransaction();
-      return res.status(500).json({ err });
-    } finally {
-      session?.endSession();
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).json({ err });
+      } else {
+        return res.status(500).json({ err });
+      }
     }
   }
 
