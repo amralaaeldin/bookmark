@@ -6,24 +6,48 @@ import { Bookmark, IBookmark, User } from './../models';
 import { RequestWithSession } from '../utils/types';
 import { DateFilter, KeywordFilter, Filter } from '../utils/filters';
 
-dotenv.config();
-
 export class BookmarkController {
   public async index(req: RequestWithSession, res: Response) {
     try {
       const filters: Filter[] = [new KeywordFilter(), new DateFilter()];
-      const query: FilterQuery<IBookmark>[] = [];
+      const query: any[] = [];
+
+      if (req.query.page) {
+        req.query.limit = req.query.limit ?? '10';
+        query.push({ $skip: (parseInt(req.query.page as string) - 1) * parseInt(req.query.limit as string) });
+      }
+      if (req.query.limit) {
+        query.push({ $limit: parseInt(req.query.limit as string) });
+      }
+      if (req.query.sort) {
+        query.push({ $sort: { [req.query.sort as string]: parseInt(req.query.order as string) } });
+      }
+      if (req.query.fields) {
+        query.push({ $project: req.query.fields });
+      }
+
+      query.unshift({ $match: { userId: req.session?.userData?.id } });
 
       filters.forEach((filter) => filter.apply(query, req));
 
-      const bookmarks = await Bookmark.find({
-        userId: req.session?.userData?.id,
-        $and: query,
-      });
+      const bookmarks = await Bookmark.aggregate(query);
+      const totalCount = await Bookmark.countDocuments(query[0].$match);
+      const pages = Math.ceil(totalCount / parseInt((req.query.limit as string) ?? '10'));
+      const currentPage = parseInt((req.query.page as string) ?? '1');
 
-      return res.status(200).json(bookmarks);
-    } catch (err) {
-      return res.status(500).json({ message: 'Error while retrieving' });
+      return res.status(200).json({
+        data: bookmarks,
+        count: bookmarks.length,
+        total_count: totalCount,
+        pages,
+        currentPage,
+        next_page: currentPage < pages ? currentPage + 1 : null,
+        previous_page: currentPage > 1 ? currentPage - 1 : null,
+      });
+    } catch (err: any) {
+      return res
+        .status(500)
+        .json({ message: process.env.NODE_ENV === 'development' ? err.message : 'Error while retrieving' });
     }
   }
 
